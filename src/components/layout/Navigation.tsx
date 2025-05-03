@@ -172,7 +172,9 @@ const Navigation = () => {
                 <Link to="/signin">
                   <Button variant="outline">Sign In</Button>
                 </Link>
-                <Button onClick={handleGetStarted}>Get Started</Button>
+                <Link to="/signup">
+                  <Button>Sign Up</Button>
+                </Link>
               </>
             )}
           </div>
@@ -227,9 +229,11 @@ const Navigation = () => {
                       Sign In
                     </Button>
                   </Link>
-                  <Button className="w-full" onClick={handleGetStarted}>
-                    Get Started
-                  </Button>
+                  <Link to="/signup" onClick={toggleMenu}>
+                    <Button className="w-full">
+                      Sign Up
+                    </Button>
+                  </Link>
                 </>
               )}
             </div>

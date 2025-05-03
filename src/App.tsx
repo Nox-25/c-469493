@@ -11,6 +11,7 @@ import ContactPage from "./pages/ContactPage";
 import PricingPage from "./pages/PricingPage";
 import SolutionsPage from "./pages/SolutionsPage";
 import SignInPage from "./pages/SignInPage";
+import SignUpPage from "./pages/SignUpPage";
 import JobVacanciesPage from "./pages/JobVacanciesPage";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/signin" element={<SignInPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
           <Route path="/job-vacancies" element={<JobVacanciesPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
