@@ -3,6 +3,8 @@ import React from "react";
 import Layout from "../components/layout/Layout";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
+import { Label } from "../components/ui/label";
+import { Input } from "../components/ui/input";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { BriefcaseBusiness, Users, FileSearch } from "lucide-react";
