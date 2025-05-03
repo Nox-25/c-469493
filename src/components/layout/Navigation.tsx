@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import {
   NavigationMenu,
@@ -11,12 +11,23 @@ import {
   NavigationMenuTrigger,
 } from "../ui/navigation-menu";
 import { Menu, X } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleGetStarted = () => {
+    if (isAuthenticated) {
+      navigate("/job-vacancies");
+    } else {
+      navigate("/signin");
+    }
   };
 
   return (
@@ -149,12 +160,21 @@ const Navigation = () => {
           </NavigationMenu>
 
           <div className="flex items-center space-x-4 ml-4">
-            <Link to="/login">
-              <Button variant="outline">Sign In</Button>
-            </Link>
-            <Link to="/get-started">
-              <Button>Get Started</Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/job-vacancies">
+                  <Button variant="outline">Job Vacancies</Button>
+                </Link>
+                <Button variant="ghost" onClick={logout}>Sign Out</Button>
+              </>
+            ) : (
+              <>
+                <Link to="/signin">
+                  <Button variant="outline">Sign In</Button>
+                </Link>
+                <Button onClick={handleGetStarted}>Get Started</Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -189,16 +209,29 @@ const Navigation = () => {
               Contact
             </Link>
             <div className="flex flex-col space-y-2 pt-4 border-t border-gray-100">
-              <Link to="/login">
-                <Button variant="outline" className="w-full" onClick={toggleMenu}>
-                  Sign In
-                </Button>
-              </Link>
-              <Link to="/get-started">
-                <Button className="w-full" onClick={toggleMenu}>
-                  Get Started
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link to="/job-vacancies" onClick={toggleMenu}>
+                    <Button variant="outline" className="w-full">
+                      Job Vacancies
+                    </Button>
+                  </Link>
+                  <Button className="w-full" onClick={() => { logout(); toggleMenu(); }}>
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/signin" onClick={toggleMenu}>
+                    <Button variant="outline" className="w-full">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Button className="w-full" onClick={handleGetStarted}>
+                    Get Started
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
