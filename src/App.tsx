@@ -15,6 +15,9 @@ import SignUpPage from "./pages/SignUpPage";
 import JobVacanciesPage from "./pages/JobVacanciesPage";
 import UpdatesPage from "./pages/UpdatesPage";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
+import ResumeBuilder from "./pages/ResumeBuilder";
 
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -35,6 +38,9 @@ function App() {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/job-vacancies" element={<JobVacanciesPage />} />
           <Route path="/updates" element={<UpdatesPage />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/resume-builder" element={<ResumeBuilder />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>

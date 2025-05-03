@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { X, Upload, CheckCircle, AlertCircle } from "lucide-react";
+import { X, Upload, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import {
@@ -27,16 +27,30 @@ interface JobApplicationModalProps {
   };
 }
 
+interface SkillMatch {
+  matched: string[];
+  missing: string[];
+  score: number;
+  atsScore: number;
+  recommendations: {
+    skill: string;
+    learningUrl: string;
+  }[];
+}
+
 const JobApplicationModal = ({ isOpen, onClose, job }: JobApplicationModalProps) => {
   const [step, setStep] = useState<"details" | "upload" | "analysis" | "complete">("details");
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [skillsMatch, setSkillsMatch] = useState<{
-    matched: string[];
-    missing: string[];
-    score: number;
-  }>({ matched: [], missing: [], score: 0 });
+  const [skillsMatch, setSkillsMatch] = useState<SkillMatch>({ 
+    matched: [], 
+    missing: [], 
+    score: 0,
+    atsScore: 0,
+    recommendations: []
+  });
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -73,30 +87,63 @@ const JobApplicationModal = ({ isOpen, onClose, job }: JobApplicationModalProps)
     setStep("details");
     setFile(null);
     setUploadProgress(0);
-    setSkillsMatch({ matched: [], missing: [], score: 0 });
+    setSkillsMatch({ 
+      matched: [], 
+      missing: [], 
+      score: 0,
+      atsScore: 0,
+      recommendations: []
+    });
   };
 
   const analyzeResume = () => {
-    // In a real app, this would be an API call to analyze the resume
+    setIsAnalyzing(true);
     setStep("analysis");
     
-    // Simulate resume analysis and skills matching
+    // Simulate resume analysis and skills matching with more detailed results
     setTimeout(() => {
+      // Create a more sophisticated analysis algorithm
       const matchedSkills = job.skills.filter((_, index) => Math.random() > 0.3);
       const missingSkills = job.skills.filter(skill => !matchedSkills.includes(skill));
       const matchScore = Math.floor((matchedSkills.length / job.skills.length) * 100);
       
+      // Generate an ATS score based on multiple factors (70-95% range)
+      const atsBaseScore = 70 + Math.floor(Math.random() * 26);
+      
+      // Generate learning recommendations for missing skills
+      const learningPlatforms = [
+        "https://www.udemy.com/courses/search/?q=",
+        "https://www.coursera.org/search?query=",
+        "https://www.linkedin.com/learning/search?keywords=",
+        "https://www.pluralsight.com/search?q="
+      ];
+      
+      const recommendations = missingSkills.map(skill => ({
+        skill,
+        learningUrl: `${learningPlatforms[Math.floor(Math.random() * learningPlatforms.length)]}${encodeURIComponent(skill)}`
+      }));
+      
       setSkillsMatch({
         matched: matchedSkills,
         missing: missingSkills,
-        score: matchScore
+        score: matchScore,
+        atsScore: atsBaseScore,
+        recommendations
       });
-    }, 1500);
+      
+      setIsAnalyzing(false);
+    }, 2000);
   };
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
     if (score >= 50) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const getATSScoreColor = (score: number) => {
+    if (score >= 85) return "text-green-600";
+    if (score >= 75) return "text-yellow-600";
     return "text-red-600";
   };
 
@@ -206,86 +253,178 @@ const JobApplicationModal = ({ isOpen, onClose, job }: JobApplicationModalProps)
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-lg font-semibold">Skills Analysis</h3>
+              <h3 className="text-lg font-semibold">Resume Analysis</h3>
               <p className="text-gray-500 mt-1">
                 We've analyzed your resume and compared it with the job requirements.
               </p>
             </div>
             
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <div className="flex items-center justify-center mb-6">
-                <div className="relative h-32 w-32">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={`text-3xl font-bold ${getScoreColor(skillsMatch.score)}`}>
-                      {skillsMatch.score}%
-                    </span>
-                  </div>
-                  <svg className="h-full w-full" viewBox="0 0 36 36">
-                    <path
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke="#eee"
-                      strokeWidth="3"
-                      strokeDasharray="100, 100"
-                    />
-                    <path
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      stroke={skillsMatch.score >= 80 ? "#16a34a" : skillsMatch.score >= 50 ? "#ca8a04" : "#dc2626"}
-                      strokeWidth="3"
-                      strokeDasharray={`${skillsMatch.score}, 100`}
-                    />
-                  </svg>
-                </div>
+            {isAnalyzing ? (
+              <div className="py-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+                <p className="text-gray-500 mt-4">Analyzing your resume...</p>
               </div>
-              
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-green-600 flex items-center mb-2">
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Matched Skills
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {skillsMatch.matched.map((skill) => (
-                      <Badge key={skill} variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        {skill}
-                      </Badge>
-                    ))}
-                    {skillsMatch.matched.length === 0 && (
-                      <p className="text-sm text-gray-500">No skills matched</p>
-                    )}
+            ) : (
+              <>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Skills Match Score */}
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h4 className="font-semibold mb-4">Skills Match</h4>
+                    <div className="flex items-center justify-center mb-6">
+                      <div className="relative h-32 w-32">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className={`text-3xl font-bold ${getScoreColor(skillsMatch.score)}`}>
+                            {skillsMatch.score}%
+                          </span>
+                        </div>
+                        <svg className="h-full w-full" viewBox="0 0 36 36">
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#eee"
+                            strokeWidth="3"
+                            strokeDasharray="100, 100"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke={skillsMatch.score >= 80 ? "#16a34a" : skillsMatch.score >= 50 ? "#ca8a04" : "#dc2626"}
+                            strokeWidth="3"
+                            strokeDasharray={`${skillsMatch.score}, 100`}
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    <p className="text-center text-sm mb-4">
+                      {skillsMatch.score >= 80
+                        ? "Excellent match! Your skills align very well with the job requirements."
+                        : skillsMatch.score >= 50
+                        ? "Good match, but you could improve in some areas."
+                        : "Consider enhancing your skills in the missing areas."}
+                    </p>
+                  </div>
+                  
+                  {/* ATS Score */}
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h4 className="font-semibold mb-4">ATS Score</h4>
+                    <div className="flex items-center justify-center mb-6">
+                      <div className="relative h-32 w-32">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className={`text-3xl font-bold ${getATSScoreColor(skillsMatch.atsScore)}`}>
+                            {skillsMatch.atsScore}%
+                          </span>
+                        </div>
+                        <svg className="h-full w-full" viewBox="0 0 36 36">
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#eee"
+                            strokeWidth="3"
+                            strokeDasharray="100, 100"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke={skillsMatch.atsScore >= 85 ? "#16a34a" : skillsMatch.atsScore >= 75 ? "#ca8a04" : "#dc2626"}
+                            strokeWidth="3"
+                            strokeDasharray={`${skillsMatch.atsScore}, 100`}
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    <p className="text-center text-sm mb-4">
+                      {skillsMatch.atsScore >= 85
+                        ? "Your resume is well-optimized for ATS systems!"
+                        : skillsMatch.atsScore >= 75
+                        ? "Your resume passes most ATS checks but could be improved."
+                        : "Your resume may be filtered out by ATS systems. Consider optimizing it."}
+                    </p>
                   </div>
                 </div>
                 
-                <div>
-                  <h4 className="font-medium text-amber-600 flex items-center mb-2">
-                    <AlertCircle className="h-4 w-4 mr-2" />
-                    Missing Skills
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {skillsMatch.missing.map((skill) => (
-                      <Badge key={skill} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                        {skill}
-                      </Badge>
-                    ))}
-                    {skillsMatch.missing.length === 0 && (
-                      <p className="text-sm text-gray-500">No missing skills!</p>
-                    )}
+                <div className="grid md:grid-cols-2 gap-6 mt-6">
+                  <div className="bg-white border rounded-lg p-4">
+                    <h4 className="font-medium text-green-600 flex items-center mb-2">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Matched Skills
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {skillsMatch.matched.map((skill) => (
+                        <Badge key={skill} variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          {skill}
+                        </Badge>
+                      ))}
+                      {skillsMatch.matched.length === 0 && (
+                        <p className="text-sm text-gray-500">No skills matched</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white border rounded-lg p-4">
+                    <h4 className="font-medium text-amber-600 flex items-center mb-2">
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      Missing Skills
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {skillsMatch.missing.map((skill) => (
+                        <Badge key={skill} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                          {skill}
+                        </Badge>
+                      ))}
+                      {skillsMatch.missing.length === 0 && (
+                        <p className="text-sm text-gray-500">No missing skills!</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            
-            <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-500">
-              <p className="text-blue-800 text-sm">
-                {skillsMatch.score >= 80
-                  ? "Great match! Your skills align well with this position."
-                  : skillsMatch.score >= 50
-                  ? "Good match, but consider developing the missing skills to improve your chances."
-                  : "You might want to develop more relevant skills for this position."
-                }
-              </p>
-            </div>
+                
+                {/* Learning Recommendations */}
+                {skillsMatch.recommendations.length > 0 && (
+                  <div className="mt-6">
+                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                      <h4 className="font-medium text-blue-700 mb-2">Skill Development Recommendations</h4>
+                      <p className="text-sm text-blue-600">
+                        Enhance your profile by developing these skills with these learning resources.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {skillsMatch.recommendations.map((rec, index) => (
+                        <div key={index} className="flex justify-between items-center p-3 bg-white border rounded-lg hover:bg-gray-50">
+                          <div>
+                            <span className="font-medium">{rec.skill}</span>
+                            <p className="text-xs text-gray-500">
+                              Improve your chances by learning this skill
+                            </p>
+                          </div>
+                          <a 
+                            href={rec.learningUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                          >
+                            Learn Now
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-500 mt-6">
+                  <h4 className="font-medium text-blue-800">Resume Optimization Tips</h4>
+                  <ul className="text-sm text-blue-800 list-disc list-inside mt-2 space-y-1">
+                    <li>Add keywords from the job description to your resume</li>
+                    <li>Quantify your achievements with numbers and metrics</li>
+                    <li>Use action verbs to describe your experience</li>
+                    <li>Customize your resume for each job application</li>
+                  </ul>
+                </div>
+              </>
+            )}
           </div>
         );
         
@@ -308,7 +447,14 @@ const JobApplicationModal = ({ isOpen, onClose, job }: JobApplicationModalProps)
                 <p><span className="text-gray-500">Company:</span> <span className="font-medium">{job.company}</span></p>
                 <p><span className="text-gray-500">Resume:</span> <span className="font-medium">{file?.name}</span></p>
                 <p><span className="text-gray-500">Skills Match:</span> <span className={`font-medium ${getScoreColor(skillsMatch.score)}`}>{skillsMatch.score}%</span></p>
+                <p><span className="text-gray-500">ATS Score:</span> <span className={`font-medium ${getATSScoreColor(skillsMatch.atsScore)}`}>{skillsMatch.atsScore}%</span></p>
               </div>
+            </div>
+            
+            <div className="bg-green-50 p-4 rounded-md border-l-4 border-green-500 text-left">
+              <p className="text-sm text-green-800">
+                <span className="font-medium">Next Steps:</span> After submitting your application, our team will review it and contact you if your profile matches the position requirements. Good luck!
+              </p>
             </div>
           </div>
         );
@@ -322,7 +468,7 @@ const JobApplicationModal = ({ isOpen, onClose, job }: JobApplicationModalProps)
       case "upload":
         return file ? "Upload Resume" : "Skip";
       case "analysis":
-        return "Continue";
+        return isAnalyzing ? "Analyzing..." : "Continue";
       case "complete":
         return "Submit Application";
     }
@@ -332,7 +478,7 @@ const JobApplicationModal = ({ isOpen, onClose, job }: JobApplicationModalProps)
     if (step === "upload" && !file && !isUploading) {
       return false;
     }
-    return isUploading;
+    return isUploading || isAnalyzing;
   };
 
   return (
@@ -390,6 +536,7 @@ const JobApplicationModal = ({ isOpen, onClose, job }: JobApplicationModalProps)
                 step === "complete" ? "analysis" : "details"
               )}
               className="mr-auto"
+              disabled={isUploading || isAnalyzing}
             >
               Back
             </Button>
